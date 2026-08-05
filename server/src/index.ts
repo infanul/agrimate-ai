@@ -12,11 +12,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({ origin: true, credentials: true }));
+// CORS Configuration: Supports local dev and production client URL (e.g. Vercel)
+const allowedOrigins = process.env.CLIENT_URL
+  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
+  : true;
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-// Health Check
+// Root & Health Check Endpoints
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'AgriMate AI Backend API',
+    environment: process.env.NODE_ENV || 'development',
+    documentation: '/api/health',
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',

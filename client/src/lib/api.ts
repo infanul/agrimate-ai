@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
 
 export interface User {
   id: string;
@@ -59,8 +60,10 @@ export async function apiRequest<T = any>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
   try {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}${formattedEndpoint}`, {
       ...options,
       headers,
     });
