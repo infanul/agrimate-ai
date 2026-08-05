@@ -1,0 +1,199 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  FARMER
+  AGRONOMIST
+  RESEARCHER
+  ADMIN
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AdvisoryCategory {
+  PEST_CONTROL
+  IRRIGATION
+  FERTILIZATION
+  WEATHER_ALERT
+  HARVEST_TIMING
+}
+
+enum CropStage {
+  PLANNING
+  SOIL_PREPARATION
+  SOWING
+  IRRIGATION
+  FERTILIZATION
+  PEST_MANAGEMENT
+  HARVESTING
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum ExpenseCategory {
+  SEEDS
+  FERTILIZER
+  IRRIGATION_WATER
+  PEST_CONTROL
+  EQUIPMENT_FUEL
+  LABOR
+  EQUIPMENT_RENTAL
+  CROP_SALES
+  GOVT_SUBSIDY
+  OTHER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         Role     @default(FARMER)
+  location     String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  farms        Farm[]
+
+  @@map("users")
+}
+
+model Farm {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  location     String
+  sizeHectares Float
+  cropType     String
+  soilType     String
+  status       String   @default("HEALTHY") // HEALTHY, ATTENTION_NEEDED, RISK
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  soilMetrics  SoilMetric[]
+  advisories   AIAdvisory[]
+  events       CropCalendarEvent[]
+  transactions FinancialTransaction[]
+  diagnostics  DiseaseDiagnostic[]
+
+  @@map("farms")
+}
+
+model SoilMetric {
+  id          String   @id @default(uuid())
+  farmId      String
+  ph          Float
+  nitrogen    Float    // mg/kg
+  phosphorus  Float    // mg/kg
+  potassium   Float    // mg/kg
+  moisture    Float    // percentage
+  temperature Float    // Celsius
+  recordedAt  DateTime @default(now())
+
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("soil_metrics")
+}
+
+model AIAdvisory {
+  id             String           @id @default(uuid())
+  farmId         String
+  title          String
+  category       AdvisoryCategory
+  severity       Severity         @default(MEDIUM)
+  recommendation String
+  status         String           @default("PENDING") // PENDING, ACTIONED, DISMISSED
+  createdAt      DateTime         @default(now())
+
+  farm           Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("ai_advisories")
+}
+
+model MarketPrice {
+  id               String   @id @default(uuid())
+  cropName         String
+  region           String
+  unit             String   @default("kg")
+  priceUSD         Float
+  changePercentage Float    // 24h price trend
+  updatedAt        DateTime @updatedAt
+
+  @@map("market_prices")
+}
+
+model CropCalendarEvent {
+  id             String    @id @default(uuid())
+  farmId         String
+  cropName       String
+  stage          CropStage @default(SOWING)
+  title          String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  status         String    @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, OVERDUE
+  priority       Severity  @default(MEDIUM)
+  isReminderSet  Boolean   @default(true)
+  reminderDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  farm           Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("crop_calendar_events")
+}
+
+model FinancialTransaction {
+  id          String          @id @default(uuid())
+  farmId      String
+  cropName    String?
+  type        TransactionType @default(EXPENSE)
+  category    ExpenseCategory
+  title       String
+  amountUSD   Float
+  date        DateTime
+  notes       String?
+  receiptRef  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  farm        Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("financial_transactions")
+}
+
+model DiseaseDiagnostic {
+  id                  String   @id @default(uuid())
+  farmId              String
+  cropName            String
+  imageUrl            String
+  diseaseDetected     String
+  scientificName      String?
+  confidenceScore     Float    // e.g. 97.4
+  severity            Severity @default(HIGH)
+  symptoms            String
+  chemicalTreatment   String
+  organicTreatment    String
+  preventiveSteps     String
+  scannedAt           DateTime @default(now())
+
+  farm                Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("disease_diagnostics")
+}
