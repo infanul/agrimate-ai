@@ -19,7 +19,34 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#080e0c] text-slate-100 selection:bg-emerald-500 selection:text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#080e0c] text-slate-100 selection:bg-emerald-500 selection:text-white">
+     {/* Animated Background */}
+<div className="absolute inset-0 -z-10 overflow-hidden">
+
+  {/* Gradient */}
+  <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-emerald-950 to-black" />
+
+  {/* Large Glow */}
+  <div className="absolute top-0 left-0 w-[700px] h-[700px] bg-emerald-500/20 rounded-full blur-[180px] animate-pulse" />
+
+  {/* Second Glow */}
+  <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[170px] animate-pulse" />
+
+  {/* Third Glow */}
+  <div className="absolute top-1/2 left-1/2 w-[450px] h-[450px] bg-teal-400/20 rounded-full blur-[150px] animate-pulse" />
+
+  {/* Grid */}
+  <div
+    className="absolute inset-0 opacity-20"
+    style={{
+      backgroundImage: `
+      linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)
+      `,
+      backgroundSize: "40px 40px",
+    }}
+  />
+</div>
       {/* Navigation Header */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#080e0c]/80 backdrop-blur-xl border-b border-emerald-900/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
