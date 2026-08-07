@@ -1,3 +1,8 @@
+import { logCropExpenses } from "./jobs/expenseJob";
+import { generateSmartCropCalendar } from "./jobs/cropCalendarJob";
+import { generateCropCalendar } from "./jobs/cropCalendarJob";
+import cron from "node-cron";
+import { updateWeatherAlerts } from "./jobs/weatherJob";
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -58,3 +63,27 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🌾 AgriMate AI Server running on http://localhost:${PORT}`);
 });
+// Run every day at 6 AM
+cron.schedule("0 6 * * *", () => {
+  console.log("🌦️ Running daily weather job...");
+  updateWeatherAlerts();
+});
+// Run crop calendar job every day at 7 AM
+cron.schedule("0 7 * * *", () => {
+  console.log("📅 Running crop calendar job...");
+  generateCropCalendar();
+});
+// Run smart crop calendar job every day at 7 AM
+cron.schedule("0 7 * * *", () => {
+  console.log("📅 Running smart crop calendar job...");
+  generateSmartCropCalendar();
+});// Run expense tracker job every day at 8 AM
+cron.schedule("0 8 * * *", () => {
+  console.log("💰 Running expense tracker job...");
+  logCropExpenses();
+});
+
+
+
+
+
