@@ -35,3 +35,4 @@ export default function WeatherDashboard() {
     <Line data={chartData} />
   </div>
 );
+}
