@@ -5,6 +5,9 @@ import fetch from "node-fetch";
 const prisma = new PrismaClient();
 
 const apiKey = process.env.OPENWEATHER_API_KEY || "b9a831ca75b614771605c4cbcb6075a3";
+if (!apiKey) {
+  throw new Error("OPENWEATHER_API_KEY is not configured");
+}
 
 const cities = [
   "Thrissur",
