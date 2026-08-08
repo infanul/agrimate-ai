@@ -4,59 +4,55 @@ const prisma = new PrismaClient();
 
 export async function logCropExpenses() {
   try {
-    // Example: fetch all crops
+    // Fetch all crops
     const crops = await prisma.crop.findMany();
 
     for (const crop of crops) {
-      // Seed expense (on planting date)
+      // Seed expense
       await prisma.expense.create({
         data: {
-          cropId: crop.id,
-          title: "Seed Purchase",
-          amount: 1200, // adjust as needed
-          category: "Seeds",
+          farmerId: crop.farmerId,
+          amount: 1200,
+          category: `Seeds - ${crop.name}`,
           date: new Date(crop.plantingDate),
         },
       });
 
-      // Fertilizer expense (30 days after planting)
+      // Fertilizer expense - 30 days after planting
       const fertDate = new Date(crop.plantingDate);
       fertDate.setDate(fertDate.getDate() + 30);
 
       await prisma.expense.create({
         data: {
-          cropId: crop.id,
-          title: "Fertilizer Purchase",
+          farmerId: crop.farmerId,
           amount: 2500,
-          category: "Fertilizer",
+          category: `Fertilizer - ${crop.name}`,
           date: fertDate,
         },
       });
 
-      // Irrigation expense (7 days after planting)
+      // Irrigation expense - 7 days after planting
       const irrigationDate = new Date(crop.plantingDate);
       irrigationDate.setDate(irrigationDate.getDate() + 7);
 
       await prisma.expense.create({
         data: {
-          cropId: crop.id,
-          title: "Irrigation Cost",
+          farmerId: crop.farmerId,
           amount: 800,
-          category: "Irrigation",
+          category: `Irrigation - ${crop.name}`,
           date: irrigationDate,
         },
       });
 
-      // Harvest expense (90 days after planting)
+      // Harvest expense - 90 days after planting
       const harvestDate = new Date(crop.plantingDate);
       harvestDate.setDate(harvestDate.getDate() + 90);
 
       await prisma.expense.create({
         data: {
-          cropId: crop.id,
-          title: "Harvesting Labor",
+          farmerId: crop.farmerId,
           amount: 5000,
-          category: "Harvest",
+          category: `Harvest - ${crop.name}`,
           date: harvestDate,
         },
       });
@@ -69,3 +65,4 @@ export async function logCropExpenses() {
     await prisma.$disconnect();
   }
 }
+

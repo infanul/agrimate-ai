@@ -1,25 +1,38 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import cron from "node-cron";
+
+import authRoutes from "./routes/auth.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
+import calendarRoutes from "./routes/calendar.routes";
+import financeRoutes from "./routes/finance.routes";
+import diagnosticsRoutes from "./routes/diagnostics.routes";
+import weatherRoutes from "./routes/weather.routes";
+
 import { logCropExpenses } from "./jobs/expenseJob";
 import { generateSmartCropCalendar } from "./jobs/cropCalendarJob";
-import { generateCropCalendar } from "./jobs/cropCalendarJob";
-import cron from "node-cron";
 import { updateWeatherAlerts } from "./jobs/weatherJob";
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.routes';
-import dashboardRoutes from './routes/dashboard.routes';
-import calendarRoutes from './routes/calendar.routes';
-import financeRoutes from './routes/finance.routes';
-import diagnosticsRoutes from './routes/diagnostics.routes';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// CORS Configuration: Supports local dev and production client URL (e.g. Vercel)
+const PORT = Number(process.env.PORT) || 5000;
+
+// --------------------------------------------------
+// CORS
+// --------------------------------------------------
+
 const allowedOrigins = process.env.CLIENT_URL
-  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
+  ? [
+      process.env.CLIENT_URL,
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:3003",
+      "http://localhost:3004",
+    ]
   : true;
 
 app.use(
@@ -28,62 +41,116 @@ app.use(
     credentials: true,
   })
 );
+
+// --------------------------------------------------
+// Middleware
+// --------------------------------------------------
+
 app.use(express.json());
 
-// Root & Health Check Endpoints
-app.get('/', (req, res) => {
+// --------------------------------------------------
+// Root
+// --------------------------------------------------
+
+app.get("/", (_req, res) => {
   res.json({
-    status: 'online',
-    service: 'AgriMate AI Backend API',
-    environment: process.env.NODE_ENV || 'development',
-    documentation: '/api/health',
+    status: "online",
+    service: "AgriMate AI Backend API",
+    environment: process.env.NODE_ENV || "development",
+    documentation: "/api/health",
   });
 });
 
-app.get('/api/health', (req, res) => {
+// --------------------------------------------------
+// Health
+// --------------------------------------------------
+
+app.get("/api/health", (_req, res) => {
   res.json({
-    status: 'online',
-    service: 'AgriMate AI Backend API',
+    status: "online",
+    service: "AgriMate AI Backend API",
     timestamp: new Date().toISOString(),
   });
 });
 
+// --------------------------------------------------
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/finance', financeRoutes);
-app.use('/api/diagnostics', diagnosticsRoutes);
+// --------------------------------------------------
 
-// 404 Handler
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/calendar", calendarRoutes);
+app.use("/api/finance", financeRoutes);
+app.use("/api/diagnostics", diagnosticsRoutes);
+app.use("/api/weather", weatherRoutes);
+
+// --------------------------------------------------
+// 404
+// --------------------------------------------------
+
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'API Endpoint Not Found' });
+  res.status(404).json({
+    success: false,
+    message: "API Endpoint Not Found",
+    path: req.originalUrl,
+  });
 });
+
+// --------------------------------------------------
+// Error Handler
+// --------------------------------------------------
+
+app.use(
+  (
+    err: Error,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error("Server error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+);
+
+// --------------------------------------------------
+// Start Server
+// --------------------------------------------------
 
 app.listen(PORT, () => {
-  console.log(`🌾 AgriMate AI Server running on http://localhost:${PORT}`);
+  console.log(`AgriMate AI Server running on port ${PORT}`);
+  console.log(`API: http://localhost:${PORT}`);
+  console.log(`Health: http://localhost:${PORT}/api/health`);
+  console.log(`Weather: http://localhost:${PORT}/api/weather`);
 });
-// Run every day at 6 AM
+
+// --------------------------------------------------
+// Scheduled Jobs
+// --------------------------------------------------
+
 cron.schedule("0 6 * * *", () => {
-  console.log("🌦️ Running daily weather job...");
-  updateWeatherAlerts();
+  console.log("Running daily weather job...");
+
+  updateWeatherAlerts().catch((error) => {
+    console.error("Weather job failed:", error);
+  });
 });
-// Run crop calendar job every day at 7 AM
+
 cron.schedule("0 7 * * *", () => {
-  console.log("📅 Running crop calendar job...");
-  generateCropCalendar();
+  console.log("Running smart crop calendar job...");
+
+  generateSmartCropCalendar().catch((error) => {
+    console.error("Smart crop calendar job failed:", error);
+  });
 });
-// Run smart crop calendar job every day at 7 AM
-cron.schedule("0 7 * * *", () => {
-  console.log("📅 Running smart crop calendar job...");
-  generateSmartCropCalendar();
-});// Run expense tracker job every day at 8 AM
+
 cron.schedule("0 8 * * *", () => {
-  console.log("💰 Running expense tracker job...");
-  logCropExpenses();
+  console.log("Running expense tracker job...");
+
+  logCropExpenses().catch((error) => {
+    console.error("Expense tracker job failed:", error);
+  });
 });
-
-
-
-
-
