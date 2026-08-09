@@ -1,5 +1,29 @@
-body {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+html, body {
+  height: 100%;
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: sans-serif;
-  background-color: #f9fafb;
+  background-color: #f9fafb; /* light gray background */
+  color: #111827; /* dark text */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+a {
+  color: #2563eb; /* Tailwind blue-600 */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
